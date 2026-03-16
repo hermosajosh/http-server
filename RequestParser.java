@@ -1,35 +1,46 @@
 import java.net.*;
+import java.io.*;
 
-Class RequestParser extends Thread {
+class RequestParser extends Thread {
 
   private String host;
   private String path;
   private int port;
 
-  private bool isRunning;
+  private boolean isRunning;
   private int activeConnections;
-  
+
+  private ServerSocket requestSocket;
+
   // Constructor
-  RequestParser(String rootPath, int port){
-    
-    this.host = hostname;
+  RequestParser(int port, String rootPath) throws IOException{
+
     this.path = rootPath;
     this.port = port;
-    private Socket requestSocket = Socket(null, this.port);
+    this.requestSocket = new ServerSocket(this.port);
 
+    this.isRunning = true;
     start();
 
   }
 
   // Thread task
-  private void run(){
-    
+  public void run(){
+
+    System.out.println("Listener Active.");
     //Wait for incoming requests
-    while(this.isRunning){
+    try {
+
+      while(this.isRunning){
+
+        new Connection(requestSocket.accept());
+
+      }
 
 
-
-    }
+    } catch (IOException e){
+      System.err.println(e);
+    } 
 
   }
 
@@ -40,7 +51,7 @@ Class RequestParser extends Thread {
   }
 
   public int getActiveConnections(){
-    
+
     return (this.activeConnections);
 
   }
