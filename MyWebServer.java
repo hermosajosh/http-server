@@ -12,7 +12,7 @@ public class MyWebServer {
     boolean isRunning = true;
 
     // Create a RequestParser
-    RequestParser parser = new RequestParser(port, rootPath);
+    ConnectionHandler handler = new ConnectionHandler(port, rootPath);
 
     System.out.println("Server running on port " + port);
     // Loop to allow user input for info/debugging

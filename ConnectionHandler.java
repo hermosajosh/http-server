@@ -1,7 +1,7 @@
 import java.net.*;
 import java.io.*;
 
-class RequestParser extends Thread {
+class ConnectionHandler extends Thread {
 
   private String host;
   private String path;
@@ -13,7 +13,7 @@ class RequestParser extends Thread {
   private ServerSocket requestSocket;
 
   // Constructor
-  RequestParser(int port, String rootPath) throws IOException{
+  ConnectionHandler(int port, String rootPath) throws IOException{
 
     this.path = rootPath;
     this.port = port;
@@ -28,19 +28,22 @@ class RequestParser extends Thread {
   public void run(){
 
     System.out.println("Listener Active.");
+
     //Wait for incoming requests
-    try {
+    while(this.isRunning){
 
-      while(this.isRunning){
+      try {
 
-        new Connection(requestSocket.accept());
+        new Connection(requestSocket.accept(), this.path);
+
+      } catch (IOException e){
+
+        System.err.println(e);
 
       }
 
+    }
 
-    } catch (IOException e){
-      System.err.println(e);
-    } 
 
   }
 
