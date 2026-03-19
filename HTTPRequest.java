@@ -74,4 +74,35 @@ class HTTPRequest {
     }
   }
 
+  //Getter methods
+
+  public String getCommand(){
+
+    return(this.command);
+
+  } 
+
+  public String getAbsolutePath(){
+
+    return(this.absolutePath);
+
+  } 
+
+  public String getVersion(){
+
+    return(this.version);
+
+  }
+
+  public Map<String, String> getHeaders(){
+    
+    return(this.headers);
+  }
+
+  public boolean getError(){
+
+    return(this.hasError);
+
+  }
+
 }

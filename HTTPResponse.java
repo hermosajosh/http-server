@@ -1,19 +1,50 @@
 import java.time.*;
+import java.text.*;
 
 class HTTPResponse {
 
   private String statusLine;
   private String date;
   private String server;
-  private String lastModified;
   private String contentLength;
 
   private byte[] body;
 
-  HTTPResponse(){
+  // Date formatters for formats allowed by HTTP 1.1 (RFC 2616-S3) not sure how important the 
+  // legacy datetime formats are but I thought I might as well implement them.
+  
+  // RFC 822/1123 date formatter for encoding/parsing
+  private SimpleDateFormat dateFormatOne = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+
+  // RFC 850/1036 date formatter for parsing (if previous fails to parse from input)
+  private SimpleDateFormat dateFormatTwo = new SimpleDateFormat("EEEE, dd-MMM-yy HH:mm:ss 'GMT'", Locale.US);
+
+  // ANSI C asctime() format
+  private SimpleDateFormat dateFormatThree = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy", Locale.US);
+ 
+  // Response String Constants
+  private final String OK = "200 OK";
+  private final String NOT_MODIFIED = "304 Not Modified";
+  private final String BAD_REQUEST = "400 Bad Request";
+  private final String NOT_FOUND = "404 Not Found";
+  private final String NOT_IMPLEMENTED = "501 Not Implemented";
+
+  HTTPResponse(HTTPRequest req){
     
     this.server = MyWebServer.SERVER_NAME;
-    this.date = LocalDateTime.now()
+    
+    // Set timezone for our date formatters to automatically format other timezone info in GMT 
+    this.dateFormatOne.setTimeZone(TimeZone.getTimeZone("GMT"));
+    this.dateFormatTwo.setTimeZone(TimeZone.getTimeZone("GMT"));
+    this.dateFormatThree.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+    this.date = this.dateFormatOne.format(LocalDateTime.now());   
+
+    if(!req.getError){
+
+
+
+    } else {this.statusLine = this.BAD_REQUEST}
 
   }
 
