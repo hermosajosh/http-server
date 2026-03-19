@@ -3,6 +3,7 @@ import java.text.*;
 
 class HTTPResponse {
 
+  private String version;
   private String statusLine;
   private String date;
   private String server;
@@ -22,14 +23,17 @@ class HTTPResponse {
   // ANSI C asctime() format
   private SimpleDateFormat dateFormatThree = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy", Locale.US);
  
-  // Response String Constants
-  private final String OK = "200 OK";
-  private final String NOT_MODIFIED = "304 Not Modified";
+  // Response String Constants, ordered by desc precedence (higher overwrites lower)
   private final String BAD_REQUEST = "400 Bad Request";
-  private final String NOT_FOUND = "404 Not Found";
   private final String NOT_IMPLEMENTED = "501 Not Implemented";
+  private final String NOT_FOUND = "404 Not Found";
+  private final String NOT_MODIFIED = "304 Not Modified";
+  private final String OK = "200 OK";
 
   HTTPResponse(HTTPRequest req){
+
+    //Initially set body to null
+    this.body = null;
     
     this.server = MyWebServer.SERVER_NAME;
     
@@ -41,76 +45,75 @@ class HTTPResponse {
     this.date = this.dateFormatOne.format(LocalDateTime.now());   
 
     if(!req.getError){
+      
+      String command = req.getCommand();
+      boolean attachBody;
 
+      // Determine how to process request based on HTTP command
+      
+      // If either of the implemented HTTP commands, then continue processing
+      if(command.equals("GET")){
 
+        attachBody = true;
+        processBody(req, attachBody);
 
+      } else if(command.equals("HEAD")){
+        
+        attachBody = false;
+        processBody(req, attachBody);
+      
+      // If illegal format (containing anything other than caps letters), set bad req status
+      } else if(!method.matches("[A-Z]+")){
+
+        this.statusLine = this.BAD_REQUEST; 
+
+      // If neither HEAD nor GET, but legal request, then throw 501 not implemented
+      } else {this.statusLine = this.NOT_IMPLEMENTED;}
+      
     } else {this.statusLine = this.BAD_REQUEST}
 
   }
 
-  public void processRequest(String request){
+  private void processBody(HTTPRequest req, boolean attachBody){
 
-    StringTokenizer tokenizedRequest = new StringTokenizer(request);
+    filePath = req.getAbsolutePath();
+    File file = new File(filePath);
 
-    if(tokenizedRequest.countTokens() >= 2){
+    // Check if a 304 Not Modified is needed to be checked for
+    String ifModifiedSinceField = req.getHeaders().get("IF-MODIFIED-SINCE");
+    if(ifModifiedSinceField != null && file.exists()){
+
+      // Parse the allowable DateTime formats
+      Date IMSDate = dateFormatOne.parse(ifModifiedSinceField);
+      if(IMSDate == null){IMSDate = dateFormatTwo.parse(ifModifiedSinceField);}
+      if(IMSDate == null){IMSDate = dateFormatThree.parse(ifModifiedSinceField);}
       
-      // Process Method
+      // Get the date of the last file modification
+      long lastModified = file.lastModified();
+      Date lastModifiedDate = new Date(lastModified);
+     
+      // Determine if we need to throw a 304 by checking that NONE of the following cases are true
+      // 1) The If-Modified-Since value could not be parsed to a date
+      // 2) The last time the file was modified occured after the If-Modified-Since date
+      // 3) The If-Modified-Since date is set in the future (after current date)
+      if( !( IMSDate == null || lastModifiedDate.after(IMSDate) || IMSDate.after(this.date) ) ){
 
-      String method = tokenizedRequest.nextToken();
-      
-      // Determine if method abides by HTTP syntax specifications
-      // Basically can only consist of uppercase letters
-      if(method.matches("[A-Z]+")){
-       
-         // Determine if method is currently implemented (GET, HEAD)
-         if(method.equals("GET") || method.equals("HEAD")){
-          
-           this.statusLine = processURL(tokenizedRequest.nextToken());
-           
-         } else {this.statusLine = "501 Not Implemented";}
+       this.statusLine = this.NOT_MODIFIED;
+       return;
 
-      } else {this.statusLine = "400 Bad Request";}
-      
-    } else {this.statusLine = "400 Bad Request";}
-  }
-
-  private String processURL(String URL){
-
-    filePath = URL;
-
-    // Handle AbsoluteURI Requests
-    if(filePath.startsWith("http")){
-
-      String[] splitPath = filePath.split("/", 4);
-
-      // Not needed, but I extract host info from absURI requests just
-      // for the sake of abidingn by the HTTP specifications in the case
-      // that this Web Server is ever expanded to full functionality
-
-      host = splitPath[2];
-      filePath = splitPath[3];
-
-    // Align filename to current directory
-    } else if(filePath.startsWith("/")){
-      filePath = filePath.substring(1);
+      }
+    
     }
-    // Check if filename references a directory (if so request index.html from said directory)
-    if(filePath.endsWith("/") || filePath.equals("")){
-      filePath = filePath + "index.html";
-    }
-
-    String completeResourcePath = this.path + filePath;
-    System.out.println("Fetching data from: " + completeResourcePath);
 
     // Obtain file, throw 404 and display simple html if it does not exist
 
     try{
 
-      FileInputStream file = new FileInputStream(completeResourcePath);
+      FileInputStream file = new FileInputStream(filePath);
       this.body = new byte[file.available()];
       file.read(this.body);
 
-      return("200 OK");
+      this.status = this.OK;
 
     } catch (FileNotFoundException e){
       
@@ -120,14 +123,19 @@ class HTTPResponse {
       // Convert html into byte data
       this.body = errorPage.getBytes(StandardCharsets.ISO_8859_1);
 
-      return("404 Object Not Found");
+      this.status = this.NOT_FOUND;
     }
+
+    // Determine if we want to attach the body or not
+    // Find Content-Length field
+    this.contentLength = this.body.length;
+    if(!attachBody){this.body = null;}
+
+
   }
 
-  // Method to handle each optional request argument. Should only be called AFTER running processRequest 
-  // if the optional request arg is to close the connection, return false. Otherwise return true for all.
-  public boolean processArgument(String argument){
-    
+  public void process(){
+    // Send data to the Socket
   }
 
 }

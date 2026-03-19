@@ -105,4 +105,23 @@ class HTTPRequest {
 
   }
 
+  public boolean keepAlive(){
+
+    boolean keepAlive = true;
+    String status = this.headers.get("CONNECTION");
+
+    if(status != null){
+
+      if(status.toUpperCase().equals("CLOSE")){
+
+        keepAlive = false;
+
+      }
+
+    }
+
+    return(keepAlive);
+
+  }
+
 }

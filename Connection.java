@@ -55,7 +55,7 @@ class Connection extends Thread {
             
             HTTPRequest req = new HTTPRequest(request, args, this.path);
             HTTPResponse res = new HTTPResponse(req);
-            closeAfterMsg = res.getConnectionStatus();
+            closeAfterMsg = req.();
             res.process();
             break;
           } else{ args.add(line); }
@@ -71,98 +71,6 @@ class Connection extends Thread {
 
     }
 
-
-  }
-
-  private boolean processRequest(StringTokenizer tokenizedRequest, PrintWriter pout, OutputStream out){
-    
-    //Process Method
-    String method = tokenizedRequest.nextToken(); 
-    boolean provideFile;
-
-    switch(method){
-
-      case "GET":
-
-       provideFile = true; 
-       break;
-
-      case "HEAD":
-
-       provideFile = false;
-       break;
-
-      default:
-        
-        // Check if request abides by HTTP syntax specifications, in which case throw a 501
-        // If request does not (special characters or lowercase letters) throw a 400
-
-        if(method.matches("[A-Z]+")){
-          
-          pout.println( "501 Not Implemented");
-
-        } else {pout.println( "400 Bad Request" );}
-
-        return(true);
-
-    }
-
-    // Process URL
-    
-    String filePath;
-    String host;
-
-    // Handle AbsoluteURI Request
-    if((filePath = tokenizedRequest.nextToken()).startsWith("http")){
-      
-      String[] splitPath = filePath.split("/", 4);
-      
-      // Not needed, but I extract host information from absolute URI requests just for
-      // the sake of abiding by the HTTP specifications in the case this Web Server is ever
-      // expanded to full functionality
-      host = splitPath[2];
-      filePath = splitPath[3];
-    
-    // Align filename to current directory
-    } else if(filePath.startsWith("/")){
-      filePath = filePath.substring(1);
-    }
-    // Check if filename references a directory (if so request index.html from said directory)
-    if(filePath.endsWith("/") || filePath.equals("")){
-      filePath = filePath + "index.html";
-    }
-
-    String completeResourcePath = this.path + filePath;
-    System.out.println("Fetching data from: " + completeResourcePath);
-   
-    // Obtain file, throw 404 and display simple html if it does not exist
-
-    byte[] data;
-    boolean wasFound;
-
-    try{
-        
-      FileInputStream file = new FileInputStream(completeResourcePath);
-      data = new byte[file.available()];
-      file.read(data);
-      
-      wasFound = true;
-
-    } catch (FileNotFoundException e){
-      pout.println( "404 Object Not Found" );
-
-      // Simple HTML to display
-      String errorPage = "<body style="text-align:center"><h1>404</h1><p>Not Found</p></body>";
-      //Convert html into byte data
-      data = errorPage.getBytes(StandardCharsets.ISO_8859_1);
-      
-      wasFound = false;
-
-    } catch (IOException e){System.err.println(e);}
-
-    
-
-    return(false);
 
   }
 
