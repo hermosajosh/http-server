@@ -1,3 +1,5 @@
+import java.util.*;
+
 class HTTPRequest {
 
   private String command;
@@ -9,10 +11,12 @@ class HTTPRequest {
 
   HTTPRequest(String reqLine, ArrayList<String> argLines, String path){
 
+    System.out.println("\n---REQUEST INTERPRETER---\n");
     this.hasError = false;
-    splitReqLine = reqLine.split(" ");
+    String[] splitReqLine = reqLine.split(" ");
 
     // Ensure request line is not malformed
+    System.out.println("Interpret First Request Line Has: " + splitReqLine.length + " tokens.");
     if (splitReqLine.length == 3){
 
       // First token is http command (no checks if it is a legit command here)
@@ -52,6 +56,7 @@ class HTTPRequest {
     }
 
     this.absolutePath += filePath;
+    System.out.println("Searching for file with path: " + this.absolutePath);
 
     System.out.println("Argument Lines: ");
 
@@ -60,9 +65,7 @@ class HTTPRequest {
       
       System.out.println(argLines.get(i));
 
-      // Divide argument line into argument, value. Ensure non-malformed input if so, skip line 
-      String[] currentLineTokens = argLines.get(i).split(":");
-      if(currentLineTokens.length != 2){this.hasError = true; continue;}
+      String[] currentLineTokens = argLines.get(i).split(":", 2);
 
       // Capitalize argument since args are specified to be case insensitive
       String currentArgument = currentLineTokens[0].toUpperCase();

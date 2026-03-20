@@ -51,12 +51,17 @@ class Connection extends Thread {
         while(true){
 
           String line = in.readLine();
+          if(line == null){
+            System.out.println("Client Timeout, Closing Connection.");
+            closeAfterMsg = true;
+            break;
+          }
           if(line.equals("")){
             
             HTTPRequest req = new HTTPRequest(request, args, this.path);
             HTTPResponse res = new HTTPResponse(req);
             closeAfterMsg = !req.keepAlive();
-            res.process();
+            res.process(out);
             break;
 
           } else{ args.add(line); }

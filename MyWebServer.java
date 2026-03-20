@@ -1,7 +1,7 @@
 import java.io.*;
 public class MyWebServer {
 
-  private static final String SERVER_NAME = "MyWebServer"; 
+  public static final String SERVER_NAME = "MyWebServer"; 
   
   public static void main(String[] args) throws IOException{
     
