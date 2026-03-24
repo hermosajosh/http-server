@@ -60,7 +60,7 @@ class Connection extends Thread {
             
             HTTPRequest req = new HTTPRequest(request, args, this.path);
             HTTPResponse res = new HTTPResponse(req);
-            closeAfterMsg = !req.keepAlive();
+            closeAfterMsg = (!req.keepAlive() || res.shouldClose());
             res.process(out);
             break;
 

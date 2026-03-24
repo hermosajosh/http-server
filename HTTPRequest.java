@@ -1,4 +1,5 @@
 import java.util.*;
+import java.io.*;
 
 class HTTPRequest {
 
@@ -13,6 +14,13 @@ class HTTPRequest {
 
     System.out.println("\n---REQUEST INTERPRETER---\n");
     this.hasError = false;
+    // Ensure the request line is not empty
+    if(reqLine == null){
+
+      this.hasError = true;
+      return;
+
+    }
     String[] splitReqLine = reqLine.split(" ");
 
     // Ensure request line is not malformed
@@ -27,7 +35,7 @@ class HTTPRequest {
       // If request line is malformed, we toggle the error flag, which will notify response builder to 
       // throw a 400 Bad Request
 
-    } else {this.hasError = true;}
+    } else {this.hasError = true; return;}
 
     // Path/URL processing
 
@@ -53,7 +61,10 @@ class HTTPRequest {
     // Check if filename references a directory (if so request index.html from said directory)
     if(filePath.endsWith("/") || filePath.equals("")){
       filePath = filePath + "index.html";
-    }
+    // Check if filename references a directory, but does not have a '/'
+    } else if(new File(this.absolutePath + filePath).isDirectory()){
+      filePath = filePath + "/index.html";
+}
 
     this.absolutePath += filePath;
     System.out.println("Searching for file with path: " + this.absolutePath);
@@ -70,7 +81,7 @@ class HTTPRequest {
       // Capitalize argument since args are specified to be case insensitive
       String currentArgument = currentLineTokens[0].toUpperCase();
       // There is an optional space possible following the ':' so we must strip the value of any spaces
-      String currentValue = currentLineTokens[1].replaceAll("//s", "");
+      String currentValue = currentLineTokens[1].trim();
       
       headers.put(currentArgument, currentValue); 
 

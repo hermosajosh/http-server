@@ -8,7 +8,12 @@ public class MyWebServer {
     // Initiate Web Server
     int port = Integer.parseInt(args[0]);
     String rootPath = args[1];
+    // Make sure root path ends with '/'
+    if(!rootPath.endsWith("/")){
 
+      rootPath += "/";
+
+    }
     boolean isRunning = true;
 
     // Create a RequestParser
@@ -20,10 +25,12 @@ public class MyWebServer {
       
 
       
-
+      // Just kidding
+      // Ran out of time to implement a TUI
+      // and also it wasn't needed
 
     }
-    // Shut Down Server
+    // Shut Down Server with Ctrl + C
     
   }
 
