@@ -175,7 +175,7 @@ class HTTPResponse {
   }
 
   // Send data to the Socket
-  public void process(OutputStream out){
+  public void process(OutputStream out, boolean closeAfterMsg){
 
     try{
 
@@ -190,6 +190,9 @@ class HTTPResponse {
         pout.println("Content-Length: " + this.contentLength);
       if(!(this.lastModified == null))
         pout.println("Last-Modified: " + this.lastModified);
+      if(closeAfterMsg)
+        pout.println("Connection: close");
+      
 
       pout.println();
 

@@ -4,13 +4,17 @@ import java.net.*;
 
 class Connection extends Thread {
 
-  Socket client;
-  String path;
+  private Socket client;
+  private ServerSocket server;
+  private String path;
+  private boolean closeAfterMsg;
 
-  Connection(Socket client, String path) throws SocketException{
+  Connection(Socket client, ServerSocket server, String path) throws SocketException{
 
     this.client = client;  
+    this.server = server;
     this.path = path;
+    this.closeAfterMsg = false;
 
     // Set thread priority level to one below the default to ensure the main thread and RequestParser thread
     // are not interrupted or slowed down by too many concurrent connections
@@ -26,8 +30,6 @@ class Connection extends Thread {
     System.out.println("Connection Established");
 
     try{
-
-      boolean closeAfterMsg = false;
 
       // Read in data from the socket, specify ISO8859-1 character encoding to abide by 
       // HTTP RFC specifications
@@ -61,22 +63,31 @@ class Connection extends Thread {
             HTTPRequest req = new HTTPRequest(request, args, this.path);
             HTTPResponse res = new HTTPResponse(req);
             closeAfterMsg = !req.keepAlive();
-            res.process(out);
+            res.process(out, closeAfterMsg);
             break;
 
           } else{ args.add(line); }
         }
       }
       
-      System.out.println("Connection Closed");
-      client.close();
-      
     } catch (IOException e) {
 
       System.err.println( "I/O Error " + e);
 
+    } finally{
+
+      System.out.println("Connection Closed");
+      client.close();
+      server.terminateConnection(this); 
+      
     }
 
+
+  }
+
+  public void closeConnection(){
+
+    this.closeAfterMsg = true;
 
   }
 
